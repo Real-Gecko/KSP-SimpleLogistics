@@ -1,6 +1,5 @@
 # KSP Simple Logistics
-Simple resource and power distribution with stock parts.
+Simple resource sharing among landed vessels.
 
 ## Requirements
-- USI Tools
 - Module Manager

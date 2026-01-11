@@ -9,11 +9,17 @@ namespace SimpleLogistics
 	[KSPAddon(KSPAddon.Startup.Flight, false)]
 	public class SimpleLogistics: MonoBehaviour
 	{
-		private static SimpleLogistics instance;
-		public static SimpleLogistics Instance { get { return instance; } }
+        public static SimpleLogistics Instance { get; private set; }
+        private static readonly HashSet<Vessel.Situations> AllowedSituations =
+        new HashSet<Vessel.Situations>
+        {
+            Vessel.Situations.PRELAUNCH,
+            Vessel.Situations.LANDED,
+            Vessel.Situations.SPLASHED
+        };
 
-		// So many lists...
-		private SortedList<string, double> resourcePool;
+        // So many lists...
+        private SortedList<string, double> resourcePool;
 		private SortedList<string, double> requestPool;
 		private SortedList<string, double> vesselSpareSpace;
 
@@ -36,15 +42,16 @@ namespace SimpleLogistics
 
 		// Same as Debug Toolbar lock mask
 		private const ulong lockMask = 900719925474097919;
+        private UICore.UICore UI;
 
-		#region Primary Functions
-		private void Awake() {
-			if (instance != null) {
+        #region Primary Functions
+        private void Awake() {
+			if (Instance != null) {
 				Destroy (this);
 				return;
 			}
 
-			instance = this;
+            Instance = this;
 		}
 
 		private void Start() {
@@ -57,7 +64,10 @@ namespace SimpleLogistics
 			config = PluginConfiguration.CreateForType<SimpleLogistics> ();
 			config.load ();
 
-			windowRect = config.GetValue<Rect>(this.name, new Rect (0, 0, 400, 400));
+            UI = new UICore.UICore();
+            UI.LoadConfig("GameData/SimpleLogistics/Skin/SimpleLogistics.cfg");
+
+            windowRect = config.GetValue<Rect>(this.name, new Rect (0, 0, 400, 400));
 
 			windowId = GUIUtility.GetControlID(FocusType.Passive);
 
@@ -92,8 +102,8 @@ namespace SimpleLogistics
 			UnlockControls ();
 			DestroyLauncher ();
 
-			if (instance == this)
-				instance = null;
+			if (Instance == this)
+                Instance = null;
 		}
 
 		private void onVesselChange(Vessel vessel) {
@@ -158,7 +168,7 @@ namespace SimpleLogistics
 		{
 			if (gamePaused || globalHidden || !active) return;
 
-			if (FlightGlobals.ActiveVessel.situation != Vessel.Situations.LANDED) {
+			if (!AllowedSituations.Contains(FlightGlobals.ActiveVessel.situation)) {
 				if (appLauncherButton != null)
 					appLauncherButton.SetFalse ();
 				else
@@ -171,7 +181,7 @@ namespace SimpleLogistics
 				refresh = false;
 			}
 
-			windowRect = Layout.Window(
+			windowRect = UI.Layout.Window(
 				windowId,
 				windowRect,
 				DrawGUI,
@@ -189,18 +199,18 @@ namespace SimpleLogistics
 		// It's a mess
 		private void DrawGUI(int windowId) {
 			GUILayout.BeginVertical ();
-			Layout.LabelAndText ("Current Vessel", FlightGlobals.ActiveVessel.RevealName());
+			UI.Layout.LabelAndText ("Current Vessel", FlightGlobals.ActiveVessel.RevealName(), UI.Palette.Col("blue"), UI.Palette.Col("White"));
 
 			bool ableToRequest = false;
 
 			LogisticsModule lm = FlightGlobals.ActiveVessel.FindPartModuleImplementing<LogisticsModule> ();
 			if (lm != null) {
-				Layout.Label (
+                UI.Layout.Label (
 					lm.IsActive ? "Pluged In" : "Unplugged",
-					lm.IsActive ? Palette.green : Palette.red
+					lm.IsActive ? UI.Palette.Col("green") : UI.Palette.Col("red")
 				);
 
-				if (Layout.Button ("Toggle Plug", Palette.yellow)) {
+				if (UI.Layout.Button ("Toggle Plug", UI.Palette.Col("yellow"))) {
 					lm.Set (!lm.IsActive);
 					refresh = true;
 				}
@@ -209,31 +219,31 @@ namespace SimpleLogistics
 
 			if (ableToRequest)
 				GetVesselSpareSpace ();
-			
-			Layout.LabelCentered ("Resource Pool:", Palette.yellow);
+
+            UI.Layout.LabelCentered ("Resource Pool:", UI.Palette.Col("yellow"));
 
 			foreach (var resource in resourcePool) {
 				GUILayout.BeginHorizontal ();
-				Layout.Label (resource.Key, Palette.yellow, GUILayout.Width(170));
+                UI.Layout.Label (resource.Key, UI.Palette.Col("yellow"), GUILayout.Width(170));
 				if (ableToRequest && requestPool.ContainsKey (resource.Key)) {
-					Layout.Label (requestPool[resource.Key].ToString("0.00") + " / " +
+                    UI.Layout.Label (requestPool[resource.Key].ToString("0.00") + " / " +
 						resource.Value.ToString ("0.00"));
 				} else
-					Layout.Label (resource.Value.ToString ("0.00"));
+                    UI.Layout.Label (resource.Value.ToString ("0.00"));
 				
 				GUILayout.EndHorizontal ();
 				if (ableToRequest && requestPool.ContainsKey(resource.Key)) {
 					GUILayout.BeginHorizontal ();
-					if (Layout.Button ("0", GUILayout.Width (20)))
+					if (UI.Layout.Button ("0", GUILayout.Width (20)))
 						requestPool [resource.Key] = 0;
 					
-					requestPool [resource.Key] = Layout.HorizontalSlider (
-						requestPool [resource.Key],
+					requestPool [resource.Key] = GUILayout.HorizontalSlider (
+						(float)requestPool [resource.Key],
 						0,
-						Math.Min (vesselSpareSpace [resource.Key], resource.Value),
+						(float)Math.Min (vesselSpareSpace [resource.Key], resource.Value),
 						GUILayout.Width (280)
 					);
-					if (Layout.Button (vesselSpareSpace [resource.Key].ToString ("0.00")))
+					if (UI.Layout.Button (vesselSpareSpace [resource.Key].ToString ("0.00")))
 						requestPool [resource.Key] = Math.Min (vesselSpareSpace [resource.Key], resource.Value);
 
 					GUILayout.EndHorizontal ();
@@ -241,11 +251,11 @@ namespace SimpleLogistics
 			}
 
 			if (ableToRequest)
-			if (Layout.Button ("Request Resources")) {
+			if (UI.Layout.Button ("Request Resources")) {
 				requested = true;
 			}
 
-			if(Layout.Button("Close", Palette.red)) {
+			if(UI.Layout.Button("Close", UI.Palette.Col("red"))) {
 				if (appLauncherButton != null)
 					appLauncherButton.SetFalse ();
 				else
@@ -278,7 +288,7 @@ namespace SimpleLogistics
 
 		public void onAppTrue()
 		{
-			if (FlightGlobals.ActiveVessel.situation != Vessel.Situations.LANDED) {
+			if (!AllowedSituations.Contains(FlightGlobals.ActiveVessel.situation)) {
 				ScreenMessages.PostScreenMessage ("Must be landed to use logistics");
 				return;
 			}
@@ -295,7 +305,7 @@ namespace SimpleLogistics
 
 		internal virtual void onToggle()
 		{
-			if (FlightGlobals.ActiveVessel.situation != Vessel.Situations.LANDED) {
+			if (!AllowedSituations.Contains(FlightGlobals.ActiveVessel.situation)) {
 				ScreenMessages.PostScreenMessage ("Must be landed to use logistics");
 				return;
 			}
@@ -323,7 +333,7 @@ namespace SimpleLogistics
 			// Find all resources in the network
 			partResources.Clear ();
 			foreach (Vessel vessel in FlightGlobals.VesselsLoaded) {
-				if (vessel.situation != Vessel.Situations.LANDED)
+				if (!AllowedSituations.Contains(vessel.situation))
 					continue;
 
 				LogisticsModule lm = vessel.FindPartModuleImplementing<LogisticsModule> ();

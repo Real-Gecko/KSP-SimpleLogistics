@@ -7,13 +7,13 @@
     <OutputType>Library</OutputType>
     <RootNamespace>SimpleLogistics</RootNamespace>
     <AssemblyName>SimpleLogistics</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>..\GameData\SimpleLogistics</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -21,28 +21,32 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
+    <OutputPath>..\GameData\SimpleLogistics</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <CustomCommands>
-      <CustomCommands>
-        <Command type="AfterBuild" command="cp ${TargetFile} /home/realgecko/Development/KSP/GameData/${ProjectName}" />
-        <Command type="AfterBuild" command="cp ${TargetFile} ${SolutionDir}/GameData/${ProjectName}" />
-        <Command type="Execute" command="/usr/bin/wine /home/realgecko/Development/KSP/KSP_x64.exe" workingdir="/home/realgecko/Development/KSP/" />
-      </CustomCommands>
-    </CustomCommands>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\KSP\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>..\..\KSP\KSP_Data\Managed\UnityEngine.dll</HintPath>
+    <Reference Include="UICore">
+      <HintPath>..\..\UICore\GameData\000_UICore\UICore.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\KSP\KSP_Data\Managed\UnityEngine.UI.dll</HintPath>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\Kerbal Space Program\KSP_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\Kerbal Space Program\KSP_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>..\..\Kerbal Space Program\KSP_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -50,14 +54,6 @@
     <Compile Include="LogisticsModule.cs" />
     <Compile Include="SimpleLogistics.cs" />
     <Compile Include="ToolbarWrapper.cs" />
-    <Compile Include="UIFramework\Core.cs" />
-    <Compile Include="UIFramework\Layout.cs" />
-    <Compile Include="UIFramework\Offsets.cs" />
-    <Compile Include="UIFramework\Palette.cs" />
-    <Compile Include="UIFramework\Styles.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <Folder Include="UIFramework\" />
-  </ItemGroup>
 </Project>

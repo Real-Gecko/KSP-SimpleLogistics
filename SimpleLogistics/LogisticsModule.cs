@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-
-namespace SimpleLogistics
+﻿namespace SimpleLogistics
 {
-	public class LogisticsModule: PartModule
+    public class LogisticsModule: PartModule
 	{
 		[KSPField(isPersistant = true, guiName = "Plugged In?", guiActive = true)]
 		private bool isActive = false;
